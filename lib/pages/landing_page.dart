@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/app_navbar.dart';
 
@@ -7,6 +8,9 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final name = user?.userMetadata?['full_name'] ?? user?.email?.split('@').first;
+
     return Scaffold(
       appBar: const AppNavBar(title: 'CareDrop'),
       body: Center(
@@ -21,6 +25,8 @@ class LandingPage extends StatelessWidget {
                   'Neighbor-to-neighbor giving.',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
+                Text("Hello, ${name ?? 'there, you need to log in to see things.'}!",
+                  style: Theme.of(context).textTheme.headlineMedium),
                 const SizedBox(height: 12),
                 const Text(
                   'Browse local requests, claim one, and drop it off. '
