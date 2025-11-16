@@ -30,12 +30,11 @@ class CareDropApp extends StatelessWidget {
         '/browse': (_) => const BrowsePage(),
         '/create': (_) => const CreateRequestPage(),
         '/dashboard': (_) => const MyDonationsPage(),
-        '/login': (_) => const LoginPage(),                      // starts in Login mode
-        '/signup': (_) => const LoginPage(startInRegister: true),// starts in Register mode
+        '/login': (_) => const LoginPage(), // starts in Login mode
+        '/signup': (_) => const LoginPage(), // starts in Register mode
         '/admin': (_) => const AdminDashboardPage(),
         '/request': (_) => const RequestDetailsPage(),
       },
     );
   }
 }
-
