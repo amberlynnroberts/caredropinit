@@ -36,6 +36,7 @@ class _MyDonationsPageState extends State<MyDonationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //Todo: need two different dashboards for my requests and my donations to requests
       appBar: const AppNavBar(title: 'My Dashboard'),
       body: Padding(
         padding: const EdgeInsets.all(16),
