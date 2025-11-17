@@ -8,6 +8,7 @@ class RequestModel {
   final String status; // pending, claimed, fulfilled
   final String? imageUrl;
   final String createdBy;
+  final String? claimedBy;
   final DateTime createdAt;
 
   RequestModel({
@@ -21,21 +22,24 @@ class RequestModel {
     required this.createdBy,
     required this.createdAt,
     this.imageUrl,
+    this.claimedBy,
   });
 
   factory RequestModel.fromMap(Map<String, dynamic> map) {
     return RequestModel(
       id: map['id']?.toString() ?? '',
-      title: map['title'] ?? '',
-      description: map['description'] ?? '',
-      category: map['category'] ?? 'general',
-      location: map['location'] ?? '',
-      quantity: (map['quantity'] ?? 1) as int,
-      status: map['status'] ?? 'pending',
-      imageUrl: map['image_url'],
-      createdBy: map['created_by'] ?? 'unknown',
-      createdAt:
-          DateTime.tryParse(map['created_at']?.toString() ?? '') ?? DateTime.now(),
+      title: map['title']?.toString() ?? '',
+      description: map['description']?.toString() ?? '',
+      category: map['category']?.toString() ?? 'general',
+      location: map['location']?.toString() ?? '',
+      quantity: int.tryParse(map['quantity']?.toString() ?? '') ?? 1,
+      status: map['status']?.toString() ?? 'pending',
+      imageUrl: map['image_url']?.toString(),
+      createdBy: map['created_by']?.toString() ?? '',
+      claimedBy: map['claimed_by']?.toString(), 
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'].toString())
+          : DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 
@@ -49,7 +53,7 @@ class RequestModel {
         'status': status,
         'image_url': imageUrl,
         'created_by': createdBy,
+        'claimed_by': claimedBy,
         'created_at': createdAt.toIso8601String(),
       };
 }
-

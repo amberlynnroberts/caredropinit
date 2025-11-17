@@ -23,7 +23,7 @@ class _BrowsePageState extends State<BrowsePage> {
   Future<List<RequestModel>> _load() async {
     final supa = SupabaseService();
     await supa.init();
-    return await supa.fetchRequests();
+    return await supa.fetchRequests(); // already filtering to pending
   }
 
   Future<void> _refresh() async {
@@ -58,10 +58,25 @@ class _BrowsePageState extends State<BrowsePage> {
                 if (items.isEmpty) {
                   return const Center(child: Text('No requests yet.'));
                 }
+
+                final supa = SupabaseService();
+                final currentUserId = supa.currentUser?.id;
+
                 return ListView.builder(
                   itemCount: items.length,
                   itemBuilder: (context, i) {
                     final item = items[i];
+
+                    final alreadyClaimed =
+                        item.claimedBy != null && item.claimedBy!.isNotEmpty;
+                    final isMine =
+                        currentUserId != null && currentUserId == item.createdBy;
+
+                    final canClaim = item.status == 'pending' &&
+                        !alreadyClaimed &&
+                        !isMine &&
+                        currentUserId != null;
+
                     return RequestCard(
                       model: item,
                       onTap: () => Navigator.pushNamed(
@@ -69,10 +84,10 @@ class _BrowsePageState extends State<BrowsePage> {
                         '/request',
                         arguments: item,
                       ),
-                      onClaim: item.status == 'pending'
+                      onClaim: canClaim
                           ? () async {
                               final supa = SupabaseService();
-                              await supa.updateRequestStatus(item.id, 'claimed');
+                              await supa.claimRequest(item.id);
                               if (mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -94,4 +109,3 @@ class _BrowsePageState extends State<BrowsePage> {
     );
   }
 }
-
