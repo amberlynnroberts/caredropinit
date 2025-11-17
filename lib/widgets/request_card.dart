@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/request_model.dart';
+import '../services/chat_service.dart';
+import '../pages/chat_screen.dart';
 
 class RequestCard extends StatelessWidget {
   final RequestModel model;
   final VoidCallback? onTap;
   final VoidCallback? onClaim;
-
   const RequestCard({super.key, required this.model, this.onTap, this.onClaim});
 
   @override
@@ -29,9 +31,13 @@ class RequestCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.16),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withOpacity(0.16),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Text(model.status),
@@ -52,6 +58,45 @@ class RequestCard extends StatelessWidget {
                   Text(model.location),
                   const Spacer(),
                   Text('Qty: ${model.quantity}'),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.chat_bubble_outline),
+                    onPressed: () async {
+                      final chat = ChatService();
+                      final donorId =
+                          Supabase.instance.client.auth.currentUser?.id;
+                      if (donorId == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('You must be signed in to chat.')),
+                        );
+                        return;
+                      }
+                      // If the current user is the requester, they may not have a donor id
+                      if (donorId == model.createdBy) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'You are the requester for this request.')),
+                        );
+                        return;
+                      }
+                      final conversationId = await chat.getOrCreateConversation(
+                        model.id,
+                        model.createdBy,
+                        donorId,
+                      );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            conversationId: conversationId,
+                            otherUserName: model.createdBy,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
               if (onClaim != null) ...[
@@ -71,4 +116,3 @@ class RequestCard extends StatelessWidget {
     );
   }
 }
-
