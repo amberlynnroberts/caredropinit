@@ -8,8 +8,21 @@ class RequestDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final RequestModel model =
-        ModalRoute.of(context)!.settings.arguments as RequestModel;
+    final args = ModalRoute.of(context)?.settings.arguments;
+
+    if (args == null || args is! RequestModel) {
+      return const Scaffold(
+        body: Center(
+          child: Text('No request data was provided.'),
+        ),
+      );
+    }
+
+    final RequestModel model = args;
+    final supa = SupabaseService();
+    final currentUserId = supa.currentUser?.id;
+    final isMine = currentUserId != null && currentUserId == model.createdBy;
+
     return Scaffold(
       appBar: AppNavBar(title: model.title),
       body: Padding(
@@ -34,10 +47,11 @@ class RequestDetailsPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
+
+              // Claim button (same rules as browse, if you want)
               FilledButton(
                 onPressed: () async {
-                  final supa = SupabaseService();
-                  await supa.updateRequestStatus(model.id, 'claimed');
+                  await supa.claimRequest(model.id);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -49,6 +63,51 @@ class RequestDetailsPage extends StatelessWidget {
                 },
                 child: const Text('Claim'),
               ),
+
+              const SizedBox(height: 16),
+
+              if (isMine)
+                TextButton.icon(
+                  icon: const Icon(Icons.delete_outline),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                  ),
+                  label: const Text('Delete this request'),
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Delete request?'),
+                        content: const Text(
+                          'This will permanently remove this request. '
+                          'This cannot be undone.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancel'),
+                          ),
+                          FilledButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Delete'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed != true) return;
+
+                    await supa.deleteRequest(model.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Request deleted.'),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
+                ),
             ],
           ),
         ),
@@ -56,4 +115,3 @@ class RequestDetailsPage extends StatelessWidget {
     );
   }
 }
-

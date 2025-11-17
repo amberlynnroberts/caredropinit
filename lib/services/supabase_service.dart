@@ -92,10 +92,19 @@ class SupabaseService {
         .from('requests')
         .select()
         .order('created_at', ascending: false);
-    return (res as List<dynamic>)
+
+    if (res == null) return [];
+
+    final list = (res as List<dynamic>)
+        .where((e) => e != null)
         .map((e) => RequestModel.fromMap(e as Map<String, dynamic>))
         .toList();
+
+    // If you only want open requests:
+    return list.where((r) => r.status == 'pending').toList();
   }
+
+
 
   Future<RequestModel> createRequest({
     required String title,
@@ -141,5 +150,17 @@ class SupabaseService {
     return (res as List<dynamic>)
         .map((e) => RequestModel.fromMap(e as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<void> claimRequest(String id) async {
+    final user = currentUser;
+    if (user == null) {
+      throw Exception('Must be signed in to claim a request.');
+    }
+
+    await client.from('requests').update({
+      'status': 'claimed',
+      'claimed_by': user.id,
+    }).eq('id', id);
   }
 }
